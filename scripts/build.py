@@ -1,0 +1,126 @@
+"""Build every profile SVG and refresh the README's pinned-repo block.
+
+python scripts/build.py --config profile.json --sprites sprites --out dist --readme README.md
+"""
+import argparse
+import html
+import json
+import re
+import sys
+from datetime import date, datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
+from cards import build_section  # noqa: E402
+from city import TIE, build_city  # noqa: E402
+from extras import build_crawl, build_footer, build_saber  # noqa: E402
+from data import (fetch_activity, fetch_calendar, fetch_languages, fetch_pinned, fetch_repos,  # noqa: E402
+                  fetch_top_repos, fetch_user, token_from_env)
+from intel import build_activity, build_languages, build_no_signal  # noqa: E402
+import os  # noqa: E402
+from hero import build_hero  # noqa: E402
+from stats import build_stats  # noqa: E402
+
+RAW = "https://raw.githubusercontent.com/{user}/{user}/output"
+START, END = "<!-- PINNED:START -->", "<!-- PINNED:END -->"
+
+
+def pinned_block(user, repos, stamp):
+    base = RAW.format(user=user)
+    links = "\n".join(
+        f'<a href="{r.url}"><img src="{base}/repo-{r.name}.svg" width="49%" alt="{html.escape(r.name + ': ' + r.description, quote=True)}" /></a>'
+        for r in repos)
+    return f"{START}\n{links}\n{END}"
+
+
+def bust_cache(text, user, stamp):
+    """Drop old ?v= stamps; the workflow pins image URLs to the output commit SHA instead."""
+    base = re.escape(RAW.format(user=user))
+    return re.sub(base + r'(/[^"?\s]+\.svg)(\?v=\d+)?', lambda m: f"{RAW.format(user=user)}{m.group(1)}", text)
+
+
+def update_readme(path, user, repos, stamp):
+    text = path.read_text(encoding="utf-8")
+    if START not in text or END not in text:
+        print(f"{path} has no pinned markers; leaving it alone")
+        return False
+    new = re.sub(re.escape(START) + r".*?" + re.escape(END), lambda _: pinned_block(user, repos, stamp), text, flags=re.S)
+    new = bust_cache(new, user, stamp)
+    if new == text:
+        return False
+    path.write_text(new, encoding="utf-8")
+    print(f"updated pinned block in {path}")
+    return True
+
+
+PLACEHOLDER = {"", "YOUR_GITHUB_USERNAME"}
+
+
+def resolve(cfg, token):
+    """Fill blanks in profile.json from the repo owner's public GitHub profile."""
+    user = cfg.get("user", "")
+    if user in PLACEHOLDER:
+        user = os.environ.get("GITHUB_REPOSITORY_OWNER", "")
+    if not user:
+        sys.exit("Set \"user\" in profile.json (or run inside GitHub Actions)")
+    gh = fetch_user(user, token) if not all(cfg.get(k) for k in ("name", "role", "tagline")) else {}
+    return {**cfg, "user": user,
+            "name": cfg.get("name") or gh.get("name") or user,
+            "role": cfg.get("role") or (gh.get("bio") or "Developer").split("|")[0].strip(),
+            "tagline": cfg.get("tagline") or gh.get("location") or f"github.com/{user}"}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--config", default="profile.json")
+    ap.add_argument("--sprites", default="sprites")
+    ap.add_argument("--out", default="dist")
+    ap.add_argument("--readme", default=None)
+    args = ap.parse_args()
+
+    token, today = token_from_env(), date.today()
+    cfg = resolve(json.loads(Path(args.config).read_text()), token)
+    user = cfg["user"]
+    seed = f"{user}-{today.isoformat()}"
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+
+    total, days = fetch_calendar(user, token)
+    if not days:
+        sys.exit("No contribution days returned; refusing to write an empty city")
+    repos = (fetch_pinned(user, token) or fetch_repos(user, cfg.get("fallback_repos", []), token)
+             or fetch_top_repos(user, token))
+    if not repos:
+        sys.exit("No repos found (pinned or fallback)")
+
+    files = {
+        "hero.svg": build_hero(cfg["name"], cfg["role"], cfg["tagline"], seed),
+        "city.svg": build_city(user, total, days, args.sprites, seed, today),
+        "stats.svg": build_stats(user, total, days, seed),
+        "crawl.svg": build_crawl([tuple(l) for l in cfg["crawl"]]),
+        "saber-blue.svg": build_saber("blue"),
+        "saber-red.svg": build_saber("red", flip=True),
+        "saber-green.svg": build_saber("green"),
+        "footer.svg": build_footer(user, TIE),
+        **build_section({k: [tuple(i) for i in v] for k, v in cfg["skills"].items()}, repos),
+    }
+    intel = {"languages.svg": build_languages(fetch_languages(user, token)),
+             "activity.svg": build_activity(fetch_activity(user, token, skip_repos=(f"{user}/{user}",)))}
+    for name, svg in intel.items():
+        if svg is None:
+            print(f"{name}: no data, writing a placeholder")
+            title = "LANGUAGE HOLOGRAM" if name.startswith("lang") else "TRANSMISSION LOG"
+            svg = build_no_signal(title, "Nothing to show yet. It will appear on the next daily build.")
+        files[name] = svg
+    for name, svg in files.items():
+        (out / name).write_text(svg, encoding="utf-8")
+        print(f"wrote {name:48s} {len(svg)/1024:7.1f} KB")
+    print(f"{total} contributions, {sum(d.count > 0 for d in days)} active days, "
+          f"{len(repos)} repos: {', '.join(r.name for r in repos)}")
+    if args.readme:
+        update_readme(Path(args.readme), user, repos, datetime.now(timezone.utc).strftime("%Y%m%d%H%M"))
+
+
+if __name__ == "__main__":
+    main()
