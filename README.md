@@ -1,7 +1,7 @@
 <!-- GALACTIC-SHOWCASE: this file is replaced by templates/profile.md the first time the workflow runs in your profile repo. -->
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/950d3a3abeca331f5d6a0a4ee1695747c65f864a/hero.svg" width="100%" alt="Animated hyperspace banner with the owner's name" />
+<img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/a72d91284c246f4e9f4b5b292618f739baa1ff12/hero.svg" width="100%" alt="Animated hyperspace banner with the owner's name" />
 
 # Galactic Profile
 
@@ -10,7 +10,7 @@ A floating city grows one tower for every day you contribute. No servers, no tok
 
 [**Use this template →**](https://github.com/new?template_name=galactic-profile&template_owner=adityavdn) &nbsp;·&nbsp; [Live example](https://github.com/adityavdn) &nbsp;·&nbsp; [Setup in 2 minutes](#setup-in-2-minutes)
 
-<a href="https://github.com/adityavdn/galactic-profile"><img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/950d3a3abeca331f5d6a0a4ee1695747c65f864a/city.svg" width="100%" alt="Contribution city: one tower rises for every active day, in a ripple across a floating platform" /></a>
+<a href="https://github.com/adityavdn/galactic-profile"><img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/a72d91284c246f4e9f4b5b292618f739baa1ff12/city.svg" width="100%" alt="Contribution city: one tower rises for every active day, in a ripple across a floating platform" /></a>
 
 </div>
 
@@ -31,9 +31,9 @@ Every image below is generated from your GitHub data and refreshed daily at 03:1
 | **Saber dividers and footer** | Little touches that ignite, hum and fly by. |
 
 <div align="center">
-<img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/950d3a3abeca331f5d6a0a4ee1695747c65f864a/stats.svg" width="100%" alt="Operations readout card" />
-<img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/950d3a3abeca331f5d6a0a4ee1695747c65f864a/languages.svg" width="49%" alt="Language hologram card" />
-<img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/950d3a3abeca331f5d6a0a4ee1695747c65f864a/activity.svg" width="49%" alt="Transmission log card" />
+<img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/a72d91284c246f4e9f4b5b292618f739baa1ff12/stats.svg" width="100%" alt="Operations readout card" />
+<img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/a72d91284c246f4e9f4b5b292618f739baa1ff12/languages.svg" width="49%" alt="Language hologram card" />
+<img src="https://raw.githubusercontent.com/adityavdn/galactic-profile/a72d91284c246f4e9f4b5b292618f739baa1ff12/activity.svg" width="49%" alt="Transmission log card" />
 </div>
 
 ## Setup in 2 minutes
